@@ -191,9 +191,14 @@ const App = () => {
 
     // 로봇 배치 모드: 클릭한 위치에 로봇 배치
     if (mode === 'PLACING_ROBOT') {
-      setRobotPosition({ x: pointer.x, y: pointer.y });
-      setGhostPosition(null);
-      setMode('IDLE');
+      const newPos = { x: pointer.x, y: pointer.y };
+      // 경계 검사: 방 안에만 배치 가능
+      if (isCircleInsidePolygon(newPos, robotRadius, roomCoords)) {
+        setRobotPosition(newPos);
+        setGhostPosition(null);
+        setMode('IDLE');
+      }
+      // 방 밖이면 배치 안됨 (계속 배치 모드 유지)
     }
   };
 
