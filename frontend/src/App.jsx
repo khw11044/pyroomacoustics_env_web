@@ -787,6 +787,12 @@ const App = () => {
           </div>
         )}
       </div>
+
+      {/* 3. 오른쪽 기술 적용 팔레트 */}
+      <div className="palette-right">
+        <h2>🔧 기술 적용</h2>
+        {/* 추후 기술 적용 버튼들이 들어갈 자리 */}
+      </div>
     </div>
   );
 };
