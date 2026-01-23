@@ -22,10 +22,10 @@ pyroomacoustics를 활용한 방 음향 시뮬레이션 웹 애플리케이션
 
 ```bash
 # 가상환경 생성 (Python 3.10)
-conda create -n room-env python=3.10 -y
+conda create -n room-sim python=3.10 -y
 
 # 가상환경 활성화
-conda activate room-env
+conda activate room-sim
 ```
 
 ### 2. 백엔드 라이브러리 설치
@@ -68,13 +68,13 @@ npm install
 
 ```bash
 # conda 환경 활성화 (이미 활성화되어 있으면 생략)
-conda activate room-env
+conda activate room-sim
 
 # 백엔드 디렉토리로 이동
 cd backend
 
-# 서버 실행
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# 서버 실행 (python -m 으로 실행해야 conda 환경의 패키지를 인식함)
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2. 프론트엔드 개발 서버 실행
