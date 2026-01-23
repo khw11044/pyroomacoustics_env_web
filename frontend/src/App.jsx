@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line, Circle } from 'react-konva';
 import axios from 'axios';
-import './App.css';
-import './Palette.css';
-import './MainContent.css';
-import './BottomBars.css';
+import './assets/css/App.css';
+import './assets/css/Palette.css';
+import './assets/css/MainContent.css';
+import './assets/css/BottomBars.css';
 
 // 백엔드 API URL
 const API_URL = 'http://localhost:8000';
