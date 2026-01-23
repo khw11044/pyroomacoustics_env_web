@@ -569,19 +569,44 @@ const App = () => {
           {isSimulating ? '⏳ 시뮬레이션 중...' : '🚀 시뮬레이션 실행'}
         </button>
 
-        {/* 시뮬레이션 결과 */}
-        {simResult && simResult.success && (
+        {/* 원본 파일 재생 */}
+        {audioSources.length > 0 && audioSources.some(a => a.file) && (
           <div className="sim-result">
-            <p className="sim-result-title">📊 결과 파일</p>
-            {simResult.output_files.map((file, i) => (
-              <a
+            <p className="sim-result-title">🔊 원본 파일 재생</p>
+            {audioSources.filter(a => a.file).map((audio, i) => (
+              <button
                 key={i}
-                href={`${API_URL}/download/${file}`}
-                download
-                className="sim-result-link"
+                className={`audio-play-btn ${playingStates[`original_${i}`] ? 'playing' : ''}`}
+                onClick={() => {
+                  const key = `original_${i}`;
+                  if (!audioRefs.current[key]) {
+                    audioRefs.current[key] = new Audio(URL.createObjectURL(audio.file));
+                    audioRefs.current[key].onended = () => {
+                      setPlayingStates(prev => ({ ...prev, [key]: false }));
+                    };
+                  }
+                  const audioEl = audioRefs.current[key];
+                  if (playingStates[key]) {
+                    audioEl.pause();
+                    setPlayingStates(prev => ({ ...prev, [key]: false }));
+                  } else {
+                    // 다른 오디오 정지
+                    Object.keys(audioRefs.current).forEach(k => {
+                      audioRefs.current[k].pause();
+                      audioRefs.current[k].currentTime = 0;
+                    });
+                    setPlayingStates(prev => {
+                      const newState = {};
+                      Object.keys(prev).forEach(k => { newState[k] = false; });
+                      newState[key] = true;
+                      return newState;
+                    });
+                    audioEl.play();
+                  }
+                }}
               >
-                🎵 마이크 {i + 1} 다운로드
-              </a>
+                {playingStates[`original_${i}`] ? '⏸' : '▶'} 원본 음원 {i + 1}
+              </button>
             ))}
           </div>
         )}
