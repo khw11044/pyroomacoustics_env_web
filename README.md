@@ -22,10 +22,10 @@ pyroomacoustics를 활용한 방 음향 시뮬레이션 웹 애플리케이션
 
 ```bash
 # 가상환경 생성 (Python 3.10)
-conda create -n room-sim python=3.10 -y
+conda create -n room-env python=3.10 -y
 
 # 가상환경 활성화
-conda activate room-sim
+conda activate room-env
 ```
 
 ### 2. 백엔드 라이브러리 설치
@@ -49,7 +49,7 @@ npm -v
 React 라이브러리 설치 
 
 ```bash
-# 현재 위치가 ~/room-simulation/frontend 인지 확인하세요.
+# 현재 위치가 ~/room-envulation/frontend 인지 확인하세요.
 
 # axios: 백엔드(FastAPI)와 통신하기 위한 도구
 # konva, react-konva: HTML5 Canvas를 리액트에서 쉽게 다루게 해주는 도구 (핵심!)
@@ -68,7 +68,7 @@ npm install
 
 ```bash
 # conda 환경 활성화 (이미 활성화되어 있으면 생략)
-conda activate room-sim
+conda activate room-env
 
 # 백엔드 디렉토리로 이동
 cd backend
@@ -113,7 +113,7 @@ http://localhost:5173
 ## 프로젝트 구조
 
 ```
-room-simulation/
+room-envulation/
 ├── backend/
 │   ├── main.py           # FastAPI 서버
 │   ├── simulation.py     # pyroomacoustics 시뮬레이션
