@@ -13,19 +13,29 @@ pyroomacoustics를 활용한 방 음향 시뮬레이션 웹 애플리케이션
 
 ## 시스템 요구사항
 
-- Python 3.8+
+- Anaconda 또는 Miniconda
 - Node.js 20.19+ 또는 22.12+
 
-## 설치
+## 환경 세팅
 
-### 1. 백엔드 설치
+### 1. Conda 가상환경 생성 및 활성화
+
+```bash
+# 가상환경 생성 (Python 3.10)
+conda create -n room-sim python=3.10 -y
+
+# 가상환경 활성화
+conda activate room-sim
+```
+
+### 2. 백엔드 라이브러리 설치
 
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-### 2. 프론트엔드 설치
+### 3. 프론트엔드 라이브러리 설치
 
 ```bash
 cd frontend
@@ -37,13 +47,20 @@ npm install
 ### 1. 백엔드 서버 실행
 
 ```bash
+# conda 환경 활성화 (이미 활성화되어 있으면 생략)
+conda activate room-sim
+
+# 백엔드 디렉토리로 이동
 cd backend
+
+# 서버 실행
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2. 프론트엔드 개발 서버 실행
 
 ```bash
+# 새 터미널에서 실행
 cd frontend
 npm run dev
 ```
@@ -81,11 +98,29 @@ room-simulation/
 │   ├── main.py           # FastAPI 서버
 │   ├── simulation.py     # pyroomacoustics 시뮬레이션
 │   ├── models.py         # Pydantic 모델
-│   └── requirements.txt
+│   └── requirements.txt  # Python 의존성
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx       # 메인 React 컴포넌트
 │   │   └── App.css       # 스타일
-│   └── package.json
+│   └── package.json      # Node.js 의존성
 └── README.md
+```
+
+## 문제 해결
+
+### pyroomacoustics 설치 오류 시
+
+```bash
+# conda-forge에서 설치
+conda install -c conda-forge pyroomacoustics
+```
+
+### 포트 충돌 시
+
+```bash
+# 백엔드 포트 변경
+uvicorn main:app --reload --host 0.0.0.0 --port 8001
+
+# 프론트엔드에서 API_URL 변경 필요 (App.jsx)
 ```
