@@ -31,7 +31,7 @@ conda activate room-sim
 ### 2. 백엔드 라이브러리 설치
 
 ```bash
-cd backend
+
 pip install -r requirements.txt
 ```
 
