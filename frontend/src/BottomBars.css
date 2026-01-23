@@ -1,0 +1,142 @@
+/* 하단 로봇 상태 바 */
+.robot-status-bar {
+  height: 60px;
+  flex-shrink: 0; /* 줄어들지 않게 */
+  background-color: #2c3e50;
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+  gap: 20px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+}
+
+.status-label {
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.size-slider {
+  flex: 1;
+  max-width: 300px;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #4a6785;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.size-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #3498db;
+  border-radius: 50%;
+  cursor: grab;
+  transition: background 0.2s;
+}
+
+.size-slider::-webkit-slider-thumb:hover {
+  background: #2980b9;
+}
+
+.size-value {
+  color: #ecf0f1;
+  font-size: 0.9rem;
+  min-width: 100px;
+}
+
+.status-divider {
+  color: #4a6785;
+  font-size: 1.2rem;
+  margin: 0 10px;
+}
+
+.position-value {
+  color: #ecf0f1;
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+
+/* 하단 음원 재생 구역 */
+.audio-player-bar {
+  height: 80px;
+  flex-shrink: 0; /* 줄어들지 않게 */
+  background-color: #1a237e; /* 진한 남색 */
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 30px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+  overflow-x: auto;
+}
+
+.audio-player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.audio-player-label {
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+  min-width: 100px;
+}
+
+.audio-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: bold;
+}
+
+.audio-btn:hover {
+  transform: scale(1.05);
+}
+
+/* 재생 버튼 */
+.audio-btn:not(.loop):not(.stop) {
+  background-color: #4CAF50;
+  color: white;
+}
+.audio-btn:not(.loop):not(.stop):hover {
+  background-color: #388E3C;
+}
+.audio-btn.playing {
+  background-color: #FF9800;
+}
+.audio-btn.playing:hover {
+  background-color: #F57C00;
+}
+
+/* 반복 버튼 */
+.audio-btn.loop {
+  background-color: #607D8B;
+  color: white;
+}
+.audio-btn.loop:hover {
+  background-color: #455A64;
+}
+.audio-btn.loop.active {
+  background-color: #9C27B0;
+}
+
+/* 정지 버튼 */
+.audio-btn.stop {
+  background-color: #f44336;
+  color: white;
+}
+.audio-btn.stop:hover {
+  background-color: #d32f2f;
+}

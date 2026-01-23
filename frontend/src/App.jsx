@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line, Circle } from 'react-konva';
 import axios from 'axios';
 import './App.css';
+import './Palette.css';
+import './MainContent.css';
+import './BottomBars.css';
 
 // 백엔드 API URL
 const API_URL = 'http://localhost:8000';
@@ -48,6 +51,11 @@ const App = () => {
 
   // 9. 서버에 업로드된 파일 목록
   const [serverFiles, setServerFiles] = useState([]);
+
+  // 10. DOA 시각화 상태 (각 알고리즘별)
+  const [showSrpPlot, setShowSrpPlot] = useState(true); // SRP 표시 여부
+  const [showMusicPlot, setShowMusicPlot] = useState(true); // MUSIC 표시 여부
+  const [showTopsPlot, setShowTopsPlot] = useState(true); // TOPS 표시 여부
 
   // 음원 색상 배열 (순환 사용)
   const AUDIO_COLORS = [
@@ -640,6 +648,62 @@ const App = () => {
           {isSimulating ? '⏳ 시뮬레이션 중...' : '🚀 시뮬레이션 실행'}
         </button>
 
+        {/* 알고리즘별 토글 (시뮬레이션 결과가 있을 때) */}
+        {simResult?.doa && (
+          <div className="doa-control">
+            <label className="algorithm-toggle srp">
+              <input
+                type="checkbox"
+                checked={showSrpPlot}
+                onChange={(e) => setShowSrpPlot(e.target.checked)}
+              />
+              <span>📡 SRP 표시</span>
+            </label>
+            <label className="algorithm-toggle music">
+              <input
+                type="checkbox"
+                checked={showMusicPlot}
+                onChange={(e) => setShowMusicPlot(e.target.checked)}
+              />
+              <span>📡 MUSIC 표시</span>
+            </label>
+            <label className="algorithm-toggle tops">
+              <input
+                type="checkbox"
+                checked={showTopsPlot}
+                onChange={(e) => setShowTopsPlot(e.target.checked)}
+              />
+              <span>📡 TOPS 표시</span>
+            </label>
+            {(showSrpPlot || showMusicPlot || showTopsPlot) && (
+              <div className="doa-legend">
+                <div className="legend-item">
+                  <span className="legend-line legend-true"></span>
+                  <span>실제 방향</span>
+                </div>
+                {showSrpPlot && (
+                  <div className="legend-item">
+                    <span className="legend-area" style={{backgroundColor: 'rgba(52, 152, 219, 0.3)', borderColor: '#3498db'}}></span>
+                    <span>SRP 응답</span>
+                  </div>
+                )}
+                {showMusicPlot && (
+                  <div className="legend-item">
+                    <span className="legend-area" style={{backgroundColor: 'rgba(230, 126, 34, 0.3)', borderColor: '#e67e22'}}></span>
+                    <span>MUSIC 응답</span>
+                  </div>
+                )}
+                {showTopsPlot && (
+                  <div className="legend-item">
+                    <span className="legend-area" style={{backgroundColor: 'rgba(155, 89, 182, 0.3)', borderColor: '#9b59b6'}}></span>
+                    <span>TOPS 응답</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 원본 파일 재생 */}
         {audioSources.length > 0 && audioSources.some(a => a.file) && (
           <div className="sim-result">
@@ -733,6 +797,153 @@ const App = () => {
                 fill="transparent"
               />
             )}
+
+            {/* DOA Polar Plot (시뮬레이션 결과가 있을 때) */}
+            {robotPosition && simResult?.doa && (showSrpPlot || showMusicPlot || showTopsPlot) && (() => {
+              const doa = simResult.doa;
+              const plotRadius = robotRadius * 4; // polar plot 크기
+              const cx = robotPosition.x;
+              const cy = robotPosition.y;
+
+              // 알고리즘별 색상
+              const algoColors = {
+                SRP: { stroke: '#3498db', fill: 'rgba(52, 152, 219, 0.2)' },
+                MUSIC: { stroke: '#e67e22', fill: 'rgba(230, 126, 34, 0.2)' },
+                TOPS: { stroke: '#9b59b6', fill: 'rgba(155, 89, 182, 0.2)' }
+              };
+
+              // 알고리즘별 표시 여부
+              const algoShow = {
+                SRP: showSrpPlot,
+                MUSIC: showMusicPlot,
+                TOPS: showTopsPlot
+              };
+
+              // spatial response를 polar 좌표로 변환하는 함수
+              const getSpatialPoints = (algoName) => {
+                const resp = doa.spatial_response[algoName];
+                if (!resp || resp.length === 0) return [];
+                return doa.azimuth_grid.map((angle, i) => {
+                  const r = plotRadius * (0.3 + 0.7 * resp[i]); // 최소 30% 크기
+                  return [
+                    cx + r * Math.cos(angle),
+                    cy - r * Math.sin(angle) // 캔버스 y축 반전
+                  ];
+                }).flat();
+              };
+
+              // 피크 찾기 함수
+              const findPeaks = (values, numPeaks) => {
+                if (!values || values.length === 0) return [];
+                const peaks = [];
+                for (let i = 1; i < values.length - 1; i++) {
+                  if (values[i] > values[i - 1] && values[i] > values[i + 1] && values[i] > 0.5) {
+                    peaks.push({ index: i, value: values[i] });
+                  }
+                }
+                if (values[0] > values[values.length - 1] && values[0] > values[1] && values[0] > 0.5) {
+                  peaks.push({ index: 0, value: values[0] });
+                }
+                return peaks.sort((a, b) => b.value - a.value).slice(0, numPeaks);
+              };
+
+              const numSources = doa.true_angles.length;
+
+              return (
+                <>
+                  {/* 배경 원 (그리드) */}
+                  <Circle
+                    x={cx}
+                    y={cy}
+                    radius={plotRadius}
+                    stroke="#ccc"
+                    strokeWidth={1}
+                    dash={[5, 5]}
+                    fill="rgba(200, 200, 200, 0.1)"
+                  />
+                  <Circle
+                    x={cx}
+                    y={cy}
+                    radius={plotRadius * 0.5}
+                    stroke="#ddd"
+                    strokeWidth={1}
+                    dash={[3, 3]}
+                  />
+
+                  {/* 각 알고리즘별 Spatial Response 폴리라인 */}
+                  {['SRP', 'MUSIC', 'TOPS'].map((algoName) => {
+                    if (!algoShow[algoName]) return null;
+                    const spatialPoints = getSpatialPoints(algoName);
+                    if (spatialPoints.length === 0) return null;
+                    return (
+                      <Line
+                        key={`spatial-${algoName}`}
+                        points={spatialPoints}
+                        stroke={algoColors[algoName].stroke}
+                        strokeWidth={2}
+                        closed={true}
+                        fill={algoColors[algoName].fill}
+                      />
+                    );
+                  })}
+
+                  {/* 실제 음원 방향 (초록 점선) */}
+                  {doa.true_angles.map((angle, i) => (
+                    <Line
+                      key={`true-${i}`}
+                      points={[
+                        cx, cy,
+                        cx + plotRadius * 1.1 * Math.cos(angle),
+                        cy - plotRadius * 1.1 * Math.sin(angle)
+                      ]}
+                      stroke="#2ecc71"
+                      strokeWidth={3}
+                      dash={[8, 4]}
+                    />
+                  ))}
+
+                  {/* 각 알고리즘별 추정 방향 (화살표) */}
+                  {['SRP', 'MUSIC', 'TOPS'].map((algoName) => {
+                    if (!algoShow[algoName]) return null;
+                    const resp = doa.spatial_response[algoName];
+                    if (!resp || resp.length === 0) return null;
+                    const peaks = findPeaks(resp, numSources * 2);
+                    const peakAngles = peaks.map(p => doa.azimuth_grid[p.index]);
+
+                    return peakAngles.map((angle, i) => {
+                      const arrowSize = 10;
+                      const arrowAngle = 0.4;
+                      const endX = cx + plotRadius * 1.05 * Math.cos(angle);
+                      const endY = cy - plotRadius * 1.05 * Math.sin(angle);
+
+                      return (
+                        <React.Fragment key={`est-${algoName}-${i}`}>
+                          <Line
+                            points={[cx, cy, endX, endY]}
+                            stroke={algoColors[algoName].stroke}
+                            strokeWidth={3}
+                          />
+                          <Line
+                            points={[
+                              endX, endY,
+                              endX - arrowSize * Math.cos(angle - arrowAngle),
+                              endY + arrowSize * Math.sin(angle - arrowAngle),
+                              endX - arrowSize * Math.cos(angle + arrowAngle),
+                              endY + arrowSize * Math.sin(angle + arrowAngle),
+                              endX, endY
+                            ]}
+                            stroke={algoColors[algoName].stroke}
+                            strokeWidth={2}
+                            fill={algoColors[algoName].stroke}
+                            closed={true}
+                          />
+                        </React.Fragment>
+                      );
+                    });
+                  })}
+                </>
+              );
+            })()}
 
             {/* 배치된 로봇 */}
             {robotPosition && (

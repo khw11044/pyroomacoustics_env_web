@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 import os
 import shutil
 
@@ -55,10 +55,18 @@ class SimulationRequest(BaseModel):
     scale: float = 100.0  # 100px = 1m
 
 
+class DOAResult(BaseModel):
+    azimuth_grid: List[float] = []      # 각도 배열 (라디안)
+    spatial_response: Dict[str, List[float]] = {}  # 알고리즘별 정규화된 spatial response {'SRP': [...], 'MUSIC': [...], 'TOPS': [...]}
+    estimated_angles: Dict[str, List[float]] = {}  # 알고리즘별 추정된 음원 방향 {'SRP': [...], 'MUSIC': [...], 'TOPS': [...]}
+    true_angles: List[float] = []       # 실제 음원 방향 (라디안)
+
+
 class SimulationResponse(BaseModel):
     success: bool
     message: str
     output_files: List[str] = []
+    doa: Optional[DOAResult] = None
 
 
 # --- API 엔드포인트 ---
@@ -104,7 +112,7 @@ async def simulate(request: SimulationRequest):
     ]
 
     # 시뮬레이션 실행
-    success, message, output_files = run_simulation(
+    result = run_simulation(
         room_coords=room_coords,
         robot_position=robot_position,
         robot_radius=request.robot_radius,
@@ -115,10 +123,16 @@ async def simulate(request: SimulationRequest):
         output_dir=OUTPUT_DIR
     )
 
+    # DOA 결과 변환
+    doa_result = None
+    if result.get("doa"):
+        doa_result = DOAResult(**result["doa"])
+
     return SimulationResponse(
-        success=success,
-        message=message,
-        output_files=output_files
+        success=result["success"],
+        message=result["message"],
+        output_files=result["output_files"],
+        doa=doa_result
     )
 
 

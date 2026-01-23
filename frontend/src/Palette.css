@@ -1,0 +1,365 @@
+/* 좌측 팔레트 (네비게이션 바) */
+.palette {
+  width: 250px; /* 너비 고정 */
+  background-color: #f0f0f0; /* 회색 배경 */
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 15px; /* 버튼 사이 간격 */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  z-index: 10;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+/* 팔레트 제목 */
+.palette h2 {
+  margin: 0 0 20px 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* 버튼 스타일 공통 */
+.btn {
+  padding: 12px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-weight: bold;
+}
+
+/* 방 만들기 버튼 */
+.btn-room {
+  background-color: #4CAF50; /* 초록색 */
+  color: white;
+}
+.btn-room:hover { background-color: #45a049; }
+.btn-room.active { background-color: #e53935; } /* 완료 상태일 때 빨간색 */
+
+/* 로봇 불러오기 버튼 */
+.btn-robot {
+  background-color: #2196F3; /* 파란색 */
+  color: white;
+}
+.btn-robot:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 마이크 버튼 */
+.btn-mic {
+  background-color: #e91e63; /* 핑크색 */
+  color: white;
+}
+.btn-mic:hover:not(:disabled) { background-color: #c2185b; }
+.btn-mic.active { background-color: #9c27b0; }
+.btn-mic:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 음원 버튼 */
+.btn-audio {
+  background-color: #FF9800; /* 주황색 */
+  color: white;
+}
+.btn-audio:hover:not(:disabled) { background-color: #F57C00; }
+.btn-audio.active { background-color: #E65100; }
+.btn-audio:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 음원 드롭존 */
+.audio-dropzone {
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  color: #666;
+  font-size: 0.85rem;
+  background-color: #fafafa;
+  transition: all 0.2s;
+}
+.audio-dropzone:hover {
+  border-color: #FF9800;
+  background-color: #fff3e0;
+}
+
+/* 서버 파일 목록 */
+.server-files-list {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.server-files-title {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  color: #555;
+  font-weight: bold;
+}
+
+.server-file-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-file-btn:hover {
+  background-color: #FF9800;
+  color: white;
+  border-color: #FF9800;
+}
+
+.server-file-btn.added {
+  background-color: #e8f5e9;
+  border-color: #4CAF50;
+  color: #2E7D32;
+}
+
+.server-file-btn.added:hover {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.dropzone-hint {
+  margin: 10px 0 0 0;
+  color: #999;
+  font-size: 0.8rem;
+}
+
+/* 음원 리스트 */
+.audio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.audio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.audio-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.audio-item.placing {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+.audio-item.placed {
+  opacity: 0.7;
+}
+
+.audio-number {
+  background: rgba(0,0,0,0.2);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.audio-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-check {
+  font-size: 0.9rem;
+}
+
+/* 시뮬레이션 버튼 */
+.btn-simulate {
+  background-color: #9C27B0; /* 보라색 */
+  color: white;
+  margin-top: 10px;
+}
+.btn-simulate:hover:not(:disabled) { background-color: #7B1FA2; }
+.btn-simulate.active {
+  background-color: #6A1B9A;
+  animation: pulse 1.5s infinite;
+}
+.btn-simulate:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* 시뮬레이션 결과 */
+.sim-result {
+  background-color: #E8F5E9;
+  border: 1px solid #4CAF50;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.sim-result-title {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  color: #2E7D32;
+  font-size: 0.9rem;
+}
+
+.sim-result-link {
+  display: block;
+  padding: 8px 12px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+  transition: all 0.2s;
+}
+
+.sim-result-link:hover {
+  background-color: #388E3C;
+  transform: translateX(3px);
+}
+
+/* 원본 파일 재생 버튼 */
+.audio-play-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.audio-play-btn:hover {
+  background-color: #F57C00;
+  transform: translateX(3px);
+}
+
+.audio-play-btn.playing {
+  background-color: #4CAF50;
+}
+
+/* DOA 컨트롤 */
+.doa-control {
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+/* 알고리즘별 토글 (하늘색 박스) */
+.algorithm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #1565c0;
+  background-color: #b3e5fc;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.algorithm-toggle:hover {
+  background-color: #81d4fa;
+}
+
+.algorithm-toggle:last-of-type {
+  margin-bottom: 0;
+}
+
+.algorithm-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.doa-legend {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #90caf9;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: #333;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 24px;
+  height: 3px;
+}
+
+.legend-line.legend-estimated {
+  background-color: #e74c3c;
+}
+
+.legend-line.legend-true {
+  background: repeating-linear-gradient(
+    90deg,
+    #2ecc71,
+    #2ecc71 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.legend-area {
+  display: inline-block;
+  width: 24px;
+  height: 12px;
+  background-color: rgba(52, 152, 219, 0.3);
+  border: 1px solid #3498db;
+  border-radius: 2px;
+}

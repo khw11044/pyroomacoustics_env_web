@@ -1,0 +1,18 @@
+/* 우측 메인 영역 (도화지 + 하단바) */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* flex 컨테이너 내에서 축소 가능하게 */
+  overflow: hidden;
+}
+
+/* 도화지 영역 */
+.canvas-area {
+  flex: 1; /* 남은 공간 다 차지 */
+  min-height: 0; /* flex item이 content보다 작아질 수 있게 */
+  background-color: white;
+  position: relative;
+  cursor: crosshair; /* 십자 모양 커서 */
+  overflow: hidden;
+}

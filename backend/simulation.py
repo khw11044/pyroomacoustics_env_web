@@ -3,7 +3,7 @@ import pyroomacoustics as pra
 from scipy.io import wavfile
 import os
 import uuid
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 # 고정 파라미터
 FS = 16000           # 샘플링 레이트 (Hz)
@@ -12,7 +12,9 @@ ABSORPTION = 0.2     # 벽 흡음 계수
 ROOM_HEIGHT = 2.5    # 방 높이 (m)
 MIC_HEIGHT = 1.0     # 마이크 높이 (m)
 SOURCE_HEIGHT = 1.0  # 음원 높이 (m)
-
+SPEED_OF_SOUND = 343.0  # 음속 (m/s)
+NFFT = 256           # FFT size
+FREQ_RANGE = [300, 3500]  # DOA 분석 주파수 범위
 
 def pixels_to_meters(coords: List[dict], scale: float) -> np.ndarray:
     """
@@ -35,7 +37,7 @@ def run_simulation(
     audio_files: dict,  # {filename: file_path}
     scale: float = 100.0,
     output_dir: str = "outputs"
-) -> Tuple[bool, str, List[str]]:
+) -> Dict[str, Any]:
     """
     pyroomacoustics 시뮬레이션 실행
 
@@ -50,7 +52,7 @@ def run_simulation(
         output_dir: 결과 파일 저장 디렉토리
 
     Returns:
-        (success, message, output_files)
+        Dict with success, message, output_files, and DOA results
     """
     try:
         os.makedirs(output_dir, exist_ok=True)
@@ -73,7 +75,12 @@ def run_simulation(
 
         # 4. 마이크 배열 설정
         if len(microphones) == 0:
-            return False, "마이크가 배치되지 않았습니다.", []
+            return {
+                "success": False,
+                "message": "마이크가 배치되지 않았습니다.",
+                "output_files": [],
+                "doa": None
+            }
 
         # 로봇 위치 (미터)
         robot_x = robot_position["x"] / scale
@@ -89,7 +96,7 @@ def run_simulation(
             mic_positions.append([mx, my, mz])
 
         # numpy 배열로 변환 [[x1,x2,...], [y1,y2,...], [z1,z2,...]]
-        R = np.array(mic_positions).T
+        R = np.array(mic_positions).T  # (3, n_mics)
 
         # 5. 모든 음원을 방에 추가
         source_count = 0
@@ -128,7 +135,12 @@ def run_simulation(
                 continue
 
         if source_count == 0:
-            return False, "배치된 음원이 없거나 오디오 파일을 로드할 수 없습니다.", []
+            return {
+                "success": False,
+                "message": "배치된 음원이 없거나 오디오 파일을 로드할 수 없습니다.",
+                "output_files": [],
+                "doa": None
+            }
 
         # 6. 마이크 추가
         room.add_microphone(R)
@@ -138,6 +150,78 @@ def run_simulation(
         premix = room.simulate(return_premix=True)
         # premix shape: (n_sources, n_mics, n_samples)
         # room.mic_array.signals shape: (n_mics, n_samples) - 모든 음원이 합쳐진 신호
+
+        # 8. DOA 분석 (마이크 2개 이상인 경우) - 세 가지 알고리즘 모두 실행
+        doa_result = None
+        if len(microphones) >= 2:
+            try:
+                audio_signal = room.mic_array.signals
+                X = pra.transform.stft.analysis(audio_signal.T, NFFT, NFFT // 2)
+                X = X.transpose([2, 1, 0])  # (n_freq, n_frames, n_mics)
+
+                # 2D 마이크 좌표 (x, y만)
+                mic_2d = np.array(mic_positions).T[:2, :]  # (2, n_mics)
+
+                # 세 가지 DOA 알고리즘 실행
+                algo_names = ['SRP', 'MUSIC', 'TOPS']
+                spatial_resp = dict()
+                estimated_angles = dict()
+                azimuth_grid = None
+
+                for algo_name in algo_names:
+                    try:
+                        doa = pra.doa.algorithms[algo_name](
+                            mic_2d, FS, NFFT,
+                            c=SPEED_OF_SOUND,
+                            num_src=source_count
+                        )
+                        doa.locate_sources(X, freq_range=FREQ_RANGE)
+
+                        # azimuth_grid는 모든 알고리즘이 동일
+                        if azimuth_grid is None:
+                            azimuth_grid = doa.grid.azimuth.tolist()
+
+                        # spatial response 정규화
+                        resp = doa.grid.values.copy()
+                        min_val = resp.min()
+                        max_val = resp.max()
+                        if max_val > min_val:
+                            resp = (resp - min_val) / (max_val - min_val)
+                        spatial_resp[algo_name] = resp.tolist()
+
+                        # 추정된 방향 (라디안)
+                        if hasattr(doa, 'azimuth_recon'):
+                            estimated_angles[algo_name] = doa.azimuth_recon.tolist()
+                        else:
+                            estimated_angles[algo_name] = []
+
+                    except Exception as e:
+                        print(f"{algo_name} DOA error: {e}")
+                        spatial_resp[algo_name] = []
+                        estimated_angles[algo_name] = []
+
+                # 실제 음원 방향 계산 (로봇 기준)
+                true_angles = []
+                for source in audio_sources:
+                    if source["position"] is None:
+                        continue
+                    dx = source["position"]["x"] - robot_position["x"]
+                    dy = source["position"]["y"] - robot_position["y"]
+                    # 캔버스 좌표계: y가 아래로 증가, 따라서 -dy
+                    angle = np.arctan2(-dy, dx)
+                    if angle < 0:
+                        angle += 2 * np.pi
+                    true_angles.append(angle)
+
+                doa_result = {
+                    "azimuth_grid": azimuth_grid,
+                    "spatial_response": spatial_resp,  # dict: {'SRP': [...], 'MUSIC': [...], 'TOPS': [...]}
+                    "estimated_angles": estimated_angles,  # dict: {'SRP': [...], 'MUSIC': [...], 'TOPS': [...]}
+                    "true_angles": true_angles
+                }
+            except Exception as e:
+                print(f"DOA error: {e}")
+                doa_result = None
 
         output_files = []
         session_id = str(uuid.uuid4())[:8]
@@ -172,7 +256,17 @@ def run_simulation(
             wavfile.write(mixed_path, FS, mixed_signal_int)
             output_files.append(mixed_filename)
 
-        return True, f"시뮬레이션 완료! {len(output_files)}개의 출력 생성", output_files
+        return {
+            "success": True,
+            "message": f"시뮬레이션 완료! {len(output_files)}개의 출력 생성",
+            "output_files": output_files,
+            "doa": doa_result
+        }
 
     except Exception as e:
-        return False, f"시뮬레이션 오류: {str(e)}", []
+        return {
+            "success": False,
+            "message": f"시뮬레이션 오류: {str(e)}",
+            "output_files": [],
+            "doa": None
+        }
