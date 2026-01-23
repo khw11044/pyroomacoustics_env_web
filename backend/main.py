@@ -141,9 +141,18 @@ async def download_file(filename: str):
 @app.get("/uploaded-files")
 def list_uploaded_files():
     """
-    업로드된 파일 목록
+    업로드된 파일 목록 (uploads 폴더 스캔)
     """
-    return {"files": list(uploaded_files.keys())}
+    # uploads 폴더의 실제 파일 목록 스캔
+    files = []
+    for f in os.listdir(UPLOAD_DIR):
+        if f.endswith('.wav'):
+            filepath = os.path.join(UPLOAD_DIR, f)
+            files.append(f)
+            # 메모리 딕셔너리에도 추가 (시뮬레이션에서 사용)
+            if f not in uploaded_files:
+                uploaded_files[f] = filepath
+    return {"files": files}
 
 
 @app.delete("/clear")

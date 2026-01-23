@@ -46,6 +46,9 @@ const App = () => {
   const canvasAreaRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
 
+  // 9. 서버에 업로드된 파일 목록
+  const [serverFiles, setServerFiles] = useState([]);
+
   // 음원 색상 배열 (순환 사용)
   const AUDIO_COLORS = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
@@ -190,7 +193,7 @@ const App = () => {
   // --- 이벤트 핸들러 ---
 
   // '방 만들기' 버튼 클릭
-  const handleRoomBtnClick = () => {
+  const handleRoomBtnClick = async () => {
     if (isRoomCreated) {
       // 이미 방이 있는데 다시 누르면 -> 리셋
       if (confirm("방을 초기화하고 새로 만드시겠습니까?")) {
@@ -201,7 +204,15 @@ const App = () => {
         setMicrophones([]); // 마이크도 초기화
         setAudioSources([]); // 음원도 초기화
         setShowAudioDropzone(false);
-        setMode('CREATING');
+        setSimResult(null); // 시뮬레이션 결과 초기화
+        setMode('IDLE'); // IDLE 모드로 (방 만들기 버튼으로 표시)
+
+        // 서버의 uploads/outputs 폴더 비우기
+        try {
+          await axios.delete(`${API_URL}/clear`);
+        } catch (error) {
+          console.error('Clear error:', error);
+        }
       }
     } else {
       if (mode === 'IDLE') {
@@ -238,8 +249,48 @@ const App = () => {
   };
 
   // '음원 불러오기' 버튼 클릭
-  const handleAudioBtnClick = () => {
-    setShowAudioDropzone(!showAudioDropzone);
+  const handleAudioBtnClick = async () => {
+    // 드롭존 토글
+    const willShow = !showAudioDropzone;
+    setShowAudioDropzone(willShow);
+
+    // 드롭존을 열 때 서버의 uploads 폴더 파일 목록 가져오기
+    if (willShow) {
+      try {
+        const response = await axios.get(`${API_URL}/uploaded-files`);
+        const files = response.data.files || [];
+        setServerFiles(files);
+      } catch (error) {
+        console.error('Failed to fetch uploaded files:', error);
+        setServerFiles([]);
+      }
+    }
+  };
+
+  // 서버 파일 선택 (드롭존에서 파일 버튼 클릭)
+  const handleServerFileSelect = (filename) => {
+    // 이미 audioSources에 있는지 확인
+    const existingIndex = audioSources.findIndex(a => a.name === filename);
+
+    if (existingIndex >= 0) {
+      // 이미 있으면 해당 음원 배치 모드로
+      if (isRoomCreated) {
+        setPlacingAudioIndex(existingIndex);
+        setMode('PLACING_AUDIO');
+        setShowAudioDropzone(false);
+      }
+    } else {
+      // 없으면 새로 추가하고 배치 모드로
+      const newSource = { name: filename, file: null, position: null };
+      const newIndex = audioSources.length;
+      setAudioSources([...audioSources, newSource]);
+
+      if (isRoomCreated) {
+        setPlacingAudioIndex(newIndex);
+        setMode('PLACING_AUDIO');
+        setShowAudioDropzone(false);
+      }
+    }
   };
 
   // 파일 드롭 핸들러
@@ -274,18 +325,20 @@ const App = () => {
     setSimResult(null);
 
     try {
-      // 1. 오디오 파일 업로드
+      // 1. 오디오 파일 업로드 (로컬에서 드롭한 파일만)
       const placedSources = audioSources.filter(a => a.position !== null);
-      const formData = new FormData();
-      placedSources.forEach(source => {
-        if (source.file) {
-          formData.append('files', source.file);
-        }
-      });
+      const filesToUpload = placedSources.filter(source => source.file);
 
-      await axios.post(`${API_URL}/upload-audio`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      if (filesToUpload.length > 0) {
+        const formData = new FormData();
+        filesToUpload.forEach(source => {
+          formData.append('files', source.file);
+        });
+
+        await axios.post(`${API_URL}/upload-audio`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
 
       // 2. 시뮬레이션 요청
       const response = await axios.post(`${API_URL}/simulate`, {
@@ -538,7 +591,25 @@ const App = () => {
             onDrop={handleFileDrop}
             onDragOver={handleDragOver}
           >
-            <p>WAV 파일을 여기에 드롭하세요</p>
+            {/* 서버에 이미 업로드된 파일 목록 */}
+            {serverFiles.length > 0 && (
+              <div className="server-files-list">
+                <p className="server-files-title">📁 업로드된 파일</p>
+                {serverFiles.map((filename, i) => {
+                  const isAdded = audioSources.some(a => a.name === filename);
+                  return (
+                    <button
+                      key={i}
+                      className={`server-file-btn ${isAdded ? 'added' : ''}`}
+                      onClick={() => handleServerFileSelect(filename)}
+                    >
+                      {isAdded ? '✓ ' : ''}{filename}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <p className="dropzone-hint">WAV 파일을 여기에 드롭하세요</p>
           </div>
         )}
 
@@ -813,11 +884,6 @@ const App = () => {
         )}
       </div>
 
-      {/* 3. 오른쪽 기술 적용 팔레트 */}
-      <div className="palette-right">
-        <h2>🔧 기술 적용</h2>
-        {/* 추후 기술 적용 버튼들이 들어갈 자리 */}
-      </div>
     </div>
   );
 };

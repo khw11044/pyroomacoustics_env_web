@@ -29,27 +29,6 @@ body, html, #root {
   overflow-y: auto;
 }
 
-/* 우측 팔레트 (기술 적용) */
-.palette-right {
-  width: 250px; /* 너비 고정 */
-  background-color: #e8f4f8; /* 연한 청색 배경 */
-  border-left: 1px solid #b0d4e3;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  gap: 15px;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-  z-index: 10;
-  flex-shrink: 0;
-  overflow-y: auto;
-}
-
-.palette-right h2 {
-  margin: 0 0 20px 0;
-  font-size: 1.5rem;
-  color: #2c5282;
-}
-
 /* 팔레트 제목 */
 .palette h2 {
   margin: 0 0 20px 0;
@@ -114,7 +93,7 @@ body, html, #root {
 .audio-dropzone {
   border: 2px dashed #aaa;
   border-radius: 8px;
-  padding: 20px;
+  padding: 15px;
   text-align: center;
   color: #666;
   font-size: 0.85rem;
@@ -124,6 +103,59 @@ body, html, #root {
 .audio-dropzone:hover {
   border-color: #FF9800;
   background-color: #fff3e0;
+}
+
+/* 서버 파일 목록 */
+.server-files-list {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.server-files-title {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  color: #555;
+  font-weight: bold;
+}
+
+.server-file-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-file-btn:hover {
+  background-color: #FF9800;
+  color: white;
+  border-color: #FF9800;
+}
+
+.server-file-btn.added {
+  background-color: #e8f5e9;
+  border-color: #4CAF50;
+  color: #2E7D32;
+}
+
+.server-file-btn.added:hover {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.dropzone-hint {
+  margin: 10px 0 0 0;
+  color: #999;
+  font-size: 0.8rem;
 }
 
 /* 음원 리스트 */
@@ -423,3 +455,4 @@ body, html, #root {
 .audio-play-btn.playing {
   background-color: #4CAF50;
 }
+
