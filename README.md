@@ -50,7 +50,7 @@ React 라이브러리 설치
 
 ```bash
 # 현재 위치가 ~/room-envulation/frontend 인지 확인하세요.
-
+cd frontend
 # axios: 백엔드(FastAPI)와 통신하기 위한 도구
 # konva, react-konva: HTML5 Canvas를 리액트에서 쉽게 다루게 해주는 도구 (핵심!)
 npm install axios konva react-konva
@@ -58,7 +58,7 @@ npm install axios konva react-konva
 ```
 
 ```bash
-cd frontend
+
 npm install
 ```
 
