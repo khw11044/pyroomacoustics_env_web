@@ -38,6 +38,26 @@ pip install -r requirements.txt
 ### 3. 프론트엔드 라이브러리 설치
 
 ```bash
+# 1. Node.js 설치 (Conda 이용, LTS 버전 설치 권장)
+conda install -c conda-forge nodejs=22 -y
+
+# 설치 확인 (버전이 뜨면 성공)
+node -v
+npm -v
+```
+
+React 라이브러리 설치 
+
+```bash
+# 현재 위치가 ~/room-simulation/frontend 인지 확인하세요.
+
+# axios: 백엔드(FastAPI)와 통신하기 위한 도구
+# konva, react-konva: HTML5 Canvas를 리액트에서 쉽게 다루게 해주는 도구 (핵심!)
+npm install axios konva react-konva
+
+```
+
+```bash
 cd frontend
 npm install
 ```
